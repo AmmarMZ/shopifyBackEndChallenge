@@ -8,56 +8,83 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+
+//using https://code.google.com/archive/p/json-simple/downloads for JSON
+//using http://jgrapht.org/ for GRAPHS
+import javax.net.ssl.HttpsURLConnection;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 
 public class JsonSolution
 {
+    static String jsonItems;
+    public static class JSONRunnable implements Runnable
+    {
+        private String url;
+        public JSONRunnable(String url)
+        {
+            this.url = url;
+        }
+        public void run()
+        {
+            jsonItems = getJSON(this.url);
+        }
+    }
+
+    public static String getJSON(String url)
+    {
+        HttpsURLConnection con = null;
+        try
+        {
+            URL u = new URL(url);
+            con = (HttpsURLConnection) u.openConnection();
+            con.connect();
+            BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null)
+            {
+                sb.append(line + "\n");
+            }
+            br.close();
+            return sb.toString();
+        }
+        catch (MalformedURLException ex)
+        {
+            ex.printStackTrace();
+        }
+        catch (IOException ex)
+        {
+            ex.printStackTrace();
+        }
+        finally
+        {
+            if (con != null)
+            {
+                try
+                {
+                    con.disconnect();
+                } catch (Exception ex)
+                {
+                    ex.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
     public static void main(String[] args)
     {
-        //copied the json as strings because they were relatively small
-        String input = "{\n" +
-                "  \"menus\":[\n" +
-                "    {\n" +
-                "      \"id\":1,\n" +
-                "      \"data\":\"House\",\n" +
-                "      \"child_ids\":[3]\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"id\":2,\n" +
-                "      \"data\":\"Company\",\n" +
-                "      \"child_ids\":[4]\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"id\":3,\n" +
-                "      \"data\":\"Kitchen\",\n" +
-                "      \"parent_id\":1,\n" +
-                "      \"child_ids\":[5]\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"id\":4,\n" +
-                "      \"data\":\"Meeting Room\",\n" +
-                "      \"parent_id\":2,\n" +
-                "      \"child_ids\":[6]\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"id\":5,\n" +
-                "      \"data\":\"Sink\",\n" +
-                "      \"parent_id\":3,\n" +
-                "      \"child_ids\":[1]\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"id\":6,\n" +
-                "      \"data\":\"Chair\",\n" +
-                "      \"parent_id\":4,\n" +
-                "      \"child_ids\":[]\n" +
-                "    }\n" +
-                "  ],\n" +
-                "  \"pagination\":{\n" +
-                "    \"current_page\":1,\n" +
-                "    \"per_page\":5,\n" +
-                "    \"total\":19\n" +
-                "  }\n" +
-                "}";
+        //copied the json as strings instead because they were relatively small
+        JSONRunnable myRunnable = new JSONRunnable("https://backend-challenge-summer-2018.herokuapp.com/challenges.json?id=1&page=1");
+        Thread thread = new Thread(myRunnable);
+        thread.start();
+        while(thread.isAlive())
+        { }
+        String input = jsonItems;
 
         //create a graph with nodes having the ids of the products from the json file
         Graph<Long, DefaultEdge> jsonGraph = createJSONGraph(input);
