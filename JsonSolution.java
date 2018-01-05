@@ -14,6 +14,7 @@ public class JsonSolution
 {
     public static void main(String[] args)
     {
+        //copied the json as strings because they were relatively small
         String input = "{\n" +
                 "  \"menus\":[\n" +
                 "    {\n" +
@@ -57,11 +58,14 @@ public class JsonSolution
                 "    \"total\":19\n" +
                 "  }\n" +
                 "}";
+
+        //create a graph with nodes having the ids of the products from the json file
         Graph<Long, DefaultEdge> jsonGraph = createJSONGraph(input);
         Set<Long> allVerticies = jsonGraph.vertexSet();
         Iterator vertIterator = allVerticies.iterator();
         CycleDetector cycleDetector = new CycleDetector(jsonGraph);
 
+        //loops stores hashsets of menus that are invalid
         ArrayList<HashSet> loops = new ArrayList<>();
         while(vertIterator.hasNext())
         {
@@ -71,6 +75,7 @@ public class JsonSolution
         }
 
 
+        //gets the relation between nodes and shows how they are linked
         ConnectivityInspector connectivityInspector = new ConnectivityInspector(jsonGraph);
         List goodSets = connectivityInspector.connectedSets();
         Iterator iterator1 = goodSets.iterator();
@@ -82,6 +87,7 @@ public class JsonSolution
             //System.out.println(temp);
         }
 
+        //cross referencing the looped menus with the menus that are connected to eliminate the invalid menus
         ArrayList<HashSet> badMenus = new ArrayList<>();
 
         for (int i = 0; i < loops.size(); i++)
@@ -95,9 +101,7 @@ public class JsonSolution
                 }
             }
         }
-
-
-
+        //formatting the output
         JSONObject output = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         output.put("valid_menus",jsonArray);
@@ -105,11 +109,10 @@ public class JsonSolution
 
         addToOutput(output,goodCyclesList,"valid_menus");
         addToOutput(output,badMenus,"invalid_menus");
-
         System.out.println(output);
-
     }
 
+    //just formatting the ouput to be be in the correct manner
     public static void addToOutput(JSONObject output, ArrayList<HashSet> inputSets, String valid)
     {
         JSONArray validItems = new JSONArray();
@@ -145,6 +148,7 @@ public class JsonSolution
 
     }
 
+    //creates a graph that uses the pIDs as node values
     private static Graph<Long, DefaultEdge> createJSONGraph(String input)
     {
         Graph<Long, DefaultEdge> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
